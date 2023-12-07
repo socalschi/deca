@@ -263,8 +263,6 @@ class VfsProcessor(VfsDatabase):
 
             [self.process_by_ftype_match, (FTYPE_SARC, 'process_sarc')],
 
-            [self.process_by_v_hash_match, (self.file_hash(b'gdc/global.gdcc'), 'process_global_gdcc')],
-            [self.process_by_ftype_match, (FTYPE_GDCBODY, 'process_global_gdcc_body')],
 
             [self.process_by_ext_hash_match, (self.ext_hash(b'.resourcebundle'), 'process_resource_bundle')],
             [self.process_by_vpath_endswith, (b'.resourcebundle', 'process_resource_bundle')],
