@@ -743,7 +743,6 @@ class VfsProcessor(VfsDatabase):
     def find_vpath_guess(self):
         self.logger.log('STRINGS BY GUESSING: ...')
         guess_strings = {}
-        guess_strings['gdc/global.gdcc'] = FTYPE_ADF
 
         for res_i in range(10):
             guess_strings['settings/hp_settings/reserve_{}.bin'.format(res_i)] = FTYPE_RTPC
