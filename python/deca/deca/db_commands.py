@@ -287,8 +287,6 @@ class Processor:
             'process_gtoc': lambda idxs: self.loop_over_uid_wrapper(idxs, self.process_gtoc),
             'process_garc': lambda idxs: self.loop_over_uid_wrapper(idxs, self.process_garc),
             'process_sarc': lambda idxs: self.loop_over_uid_wrapper(idxs, self.process_sarc),
-            'process_global_gdcc': lambda idxs: self.loop_over_uid_wrapper(idxs, self.process_global_gdcc),
-            'process_global_gdcc_body': lambda idxs: self.loop_over_uid_wrapper(idxs, self.process_global_gdcc_body),
             'process_resource_bundle': lambda idxs: self.loop_over_uid_wrapper(idxs, self.process_resource_bundle),
             'process_adf_initial': lambda idxs: self.loop_over_uid_wrapper(idxs, self.process_adf_initial),
             'process_rtpc_initial': lambda idxs: self.loop_over_uid_wrapper(idxs, self.process_rtpc_initial),
@@ -512,64 +510,6 @@ class Processor:
 
             db.node_add(cnode)
             db.propose_string(cnode.v_path, node)
-
-        node.flags_set(node_flag_processed_file_type)
-        db.node_update(node)
-        return True
-
-    def process_global_gdcc(self, node: VfsNode, db: DbWrap):
-        self._comm.trace('Processing global gdcc": gdc/global.gdcc')
-
-        # special case starting point for runtime
-        try:
-            adf = db.node_read_adf(node)
-
-            cnode_name = b'gdc/global.gdc.DECA'
-            cnode = VfsNode(
-                v_hash=db.file_hash(cnode_name),
-                v_hash_type=db.file_hash_type,
-                v_path=cnode_name,
-                file_type=FTYPE_GDCBODY, pid=node.uid,
-                offset=adf.table_instance[0].offset,
-                size_c=adf.table_instance[0].size,
-                size_u=adf.table_instance[0].size,
-            )
-            db.node_add(cnode)
-
-            node.flags_set(node_flag_processed_file_type)
-            db.node_update(node)
-            return True
-
-        except EDecaUnknownCompressionType as ae:
-            self._comm.log('DBCmd: Unknown Compression Type {} in {} {} {}'.format(
-                ae.type_id, node.v_hash_to_str(), node.v_path, node.p_path))
-        except EDecaMissingAdfType as ae:
-            self._comm.log('DBCmd: Missing ADF Type {:08x} in {} {} {}'.format(
-                ae.type_id, node.v_hash_to_str(), node.v_path, node.p_path))
-
-        return False
-
-    def process_global_gdcc_body(self, node: VfsNode, db: DbWrap):
-        self._comm.trace('Processing global gdcc body": gdc/global.gdcc.DECA')
-
-        pnode = db.db().node_where_uid(node.pid)
-        adf = db.node_read_adf(pnode)
-
-        for entry in adf.table_instance_values[0]:
-            if isinstance(entry, GdcArchiveEntry):
-                # self.logger.log('GDCC: {} {}'.format(entry.v_hash_to_str(), entry.v_path))
-                adf_type = entry.adf_type_hash
-                file_type = None
-                if adf_type is not None:
-                    file_type = FTYPE_ADF_BARE
-                    # self.logger.log('ADF_BARE: Need Type: {:08x} {}'.format(adf_type, entry.v_path))
-                cnode = VfsNode(
-                    v_hash_type=db.file_hash_type,
-                    v_hash=entry.v_hash, pid=node.uid, index=entry.index,
-                    offset=entry.offset, size_c=entry.size, size_u=entry.size, v_path=entry.v_path,
-                    file_type=file_type, file_sub_type=adf_type)
-                db.node_add(cnode)
-                db.propose_string(cnode.v_path, node)
 
         node.flags_set(node_flag_processed_file_type)
         db.node_update(node)
